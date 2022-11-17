@@ -8,6 +8,8 @@ from schemas.sec_userole import Sec_userole
 from schemas.sec_privilege import Sec_privilege
 from schemas.sec_resource import Sec_resource
 
+from fastapi.responses import JSONResponse
+
 from starlette.status import HTTP_204_NO_CONTENT
 
 sec_userole = APIRouter()
@@ -81,24 +83,50 @@ def update_sec_userole( id: int , sec_privilege : Sec_privilege):
     conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == id))
     return "updated"
 
-'''
-@sec_userole.put("/sec_userole/{sec_userole_id}/code/{sec_userole_code}", response_model=Sec_userole ,tags=["sec_userole"])
-def update_sec_userole(sec_userole_id: int, sec_userole_code: str, sec_privilege_id: int , sec_privilege : Sec_privilege):
-    
-    update_sec_privilege = {
-        
-        "privtype": sec_privilege.privtype,
-        
-    }
-   
-   
-    conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == sec_privilege_id  and sec_resources.c.id == sec_resource_id and sec_useroles.c.id == sec_userole_id))
-    return "updated"
-    '''
+
     
 @sec_userole.delete("/sec_userole/{sec_userole_id}/sec_resource/{sec_resource_id}" ,tags=["sec_userole"])
-def delete_sec_privilege_by_sec_resource( sec_userole_id: int ,sec_resource_id: int, sec_privilege : Sec_privilege):
+def delete_sec_privilege_by_sec_resource( sec_userole_id: int ,sec_resource_id: int):
     
    # privilege = conn.execute(sec_privilege.select()).fetchall()
-    conn.execute(sec_privileges.delete().where(sec_privileges.c.id_userole == sec_userole_id and sec_resources.c.id_resource == sec_resource_id ))
+    conn.execute(sec_privileges.delete().where(sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id ))
+   
     return "deleted"
+    #return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+
+
+    
+@sec_userole.put("/update_sec_privilege/sec_userole/{sec_userole_id}/sec_resource/{sec_resource_id}/sec_privilege/{sec_privilege_id}/privtype/{privtype}/}" ,tags=["sec_userole"])
+def update_privilege( sec_userole_id: int ,sec_resource_id: int, sec_privilege_id: int, privtype : str  ):
+    
+    update_sec_privilege = {
+        "privtype": privtype  ,
+                
+    }
+    
+   
+    
+    #conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == sec_privilege_id and sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id))
+   
+    
+    return  conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == sec_privilege_id and sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id))
+
+
+
+@sec_userole.get("/sec_userole/code/{sec_userole_code}", response_model=list[Sec_privilege],  tags=["sec_userole"])
+def get_privilege_by_sec_userole_code(sec_userole_code: str):
+    
+    
+    result = conn.execute(sec_useroles.select().where(sec_useroles.c.code == sec_userole_code)).fetchall()
+    
+    
+    #print(result[0][0])
+    
+   # priv = conn.execute(sec_privileges.select().where(sec_privileges.c.id_userole == result[0][0])).fetchall()
+    
+    #print(priv)
+    
+    return conn.execute(sec_privileges.select().where(sec_privileges.c.id_userole == result[0][0])).fetchall()
+
