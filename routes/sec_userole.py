@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Response, status
 from config.db import conn
-from models.sec_userole import sec_useroles
+
+"""
+from models.sec_userole import sec_userole
 from models.sec_privilege import sec_privileges
 from models.sec_resource import sec_resources
+"""
+
+from models.sec_userole import SecUserole
+from models.sec_privilege import SecPrivilege
+from models.sec_resource import SecResource
 
 from schemas.sec_userole import Sec_userole
 from schemas.sec_privilege import Sec_privilege
@@ -15,8 +22,8 @@ from starlette.status import HTTP_204_NO_CONTENT
 sec_userole = APIRouter()
 
 @sec_userole.get("/sec_userole", response_model=list[Sec_userole], tags=["sec_userole"])
-def get_sec_useroles():
-    return conn.execute(sec_useroles.select()).fetchall()
+def get_sec_userole():
+    return conn.execute(SecUserole.select()).fetchall()
 
 @sec_userole.post("/sec_userole", response_model=Sec_userole, tags=["sec_userole"])
 def create_sec_userole(sec_userole:Sec_userole):
@@ -30,22 +37,22 @@ def create_sec_userole(sec_userole:Sec_userole):
         "usrpassword": sec_userole.usrpassword,
         "email": sec_userole.email
     }
-    result = conn.execute(sec_useroles.insert().values(new_sec_userole))
+    result = conn.execute(SecUserole.insert().values(new_sec_userole))
     
     #print(result.lastrowid)
-    return conn.execute(sec_useroles.select().where(sec_useroles.c.id == result.lastrowid)).first()
+    return conn.execute(SecUserole.select().where(SecUserole.c.id == result.lastrowid)).first()
 
 @sec_userole.get("/sec_userole/{id}", response_model=Sec_userole, tags=["sec_userole"])
 def get_sec_userole(id: int):
-    return conn.execute(sec_useroles.select().where(sec_useroles.c.id== id)).first()
+    return conn.execute(SecUserole.select().where(SecUserole.c.id== id)).first()
 
 @sec_userole.delete("/sec_userole/{id}", status_code=HTTP_204_NO_CONTENT, tags=["sec_userole"]  )
 def delete_sec_userole(id: int):
-    conn.execute(sec_useroles.delete().where(sec_useroles.c.id == id))
+    conn.execute(SecUserole.delete().where(SecUserole.c.id == id))
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-@sec_userole.put("/sec_userole/{id}", response_model=Sec_userole, tags=["sec_userole"])
+@sec_userole.put("/sec_userole/{id}", tags=["sec_userole"])
 def update_sec_userole(id: int, sec_userole : Sec_userole):
     
     update_sec_userole = {
@@ -58,7 +65,7 @@ def update_sec_userole(id: int, sec_userole : Sec_userole):
         "email": sec_userole.email
     }
     
-    conn.execute(sec_useroles.update().values(update_sec_userole).where(sec_useroles.c.id == id))
+    conn.execute(SecUserole.update().values(update_sec_userole).where(SecUserole.c.id == id))
     return "updated"
 
 
@@ -80,7 +87,7 @@ def update_sec_userole( id: int , sec_privilege : Sec_privilege):
    
    
    
-    conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == id))
+    conn.execute(SecPrivilege.update().values(update_sec_privilege).where(SecPrivilege.c.id == id))
     return "updated"
 
 
@@ -89,7 +96,7 @@ def update_sec_userole( id: int , sec_privilege : Sec_privilege):
 def delete_sec_privilege_by_sec_resource( sec_userole_id: int ,sec_resource_id: int):
     
    # privilege = conn.execute(sec_privilege.select()).fetchall()
-    conn.execute(sec_privileges.delete().where(sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id ))
+    conn.execute(SecPrivilege.delete().where(SecPrivilege.c.id_userole == sec_userole_id and SecPrivilege.c.id_resource == sec_resource_id ))
    
     return "deleted"
     #return Response(status_code=HTTP_204_NO_CONTENT)
@@ -98,35 +105,33 @@ def delete_sec_privilege_by_sec_resource( sec_userole_id: int ,sec_resource_id: 
 
 
     
-@sec_userole.put("/update_sec_privilege/sec_userole/{sec_userole_id}/sec_resource/{sec_resource_id}/sec_privilege/{sec_privilege_id}/privtype/{privtype}/}" ,tags=["sec_userole"])
+@sec_userole.patch("/update_sec_privilege/sec_userole/{sec_userole_id}/sec_resource/{sec_resource_id}/sec_privilege/{sec_privilege_id}/privtype/{privtype}", response_model=Sec_privilege ,tags=["sec_userole"])
 def update_privilege( sec_userole_id: int ,sec_resource_id: int, sec_privilege_id: int, privtype : str  ):
     
     update_sec_privilege = {
-        "privtype": privtype  ,
+        "privtype": privtype ,
                 
     }
     
    
     
-    #conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == sec_privilege_id and sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id))
+    #conn.execute(SecPrivilege.update().values(update_sec_privilege).where(SecPrivilege.c.id == sec_privilege_id and SecPrivilege.c.id_userole == sec_userole_id and SecPrivilege.c.id_resource == sec_resource_id))
    
     
-    return  conn.execute(sec_privileges.update().values(update_sec_privilege).where(sec_privileges.c.id == sec_privilege_id and sec_privileges.c.id_userole == sec_userole_id and sec_privileges.c.id_resource == sec_resource_id))
+    return  conn.execute(SecPrivilege.update().values(update_sec_privilege).where(SecPrivilege.c.id == sec_privilege_id and SecPrivilege.c.id_userole == sec_userole_id and SecPrivilege.c.id_resource == sec_resource_id))
 
 
 
 @sec_userole.get("/sec_userole/code/{sec_userole_code}", response_model=list[Sec_privilege],  tags=["sec_userole"])
 def get_privilege_by_sec_userole_code(sec_userole_code: str):
-    
-    
-    result = conn.execute(sec_useroles.select().where(sec_useroles.c.code == sec_userole_code)).fetchall()
+    result = conn.execute(SecUserole.select().where(SecUserole.c.code == sec_userole_code)).fetchall()
     
     
     #print(result[0][0])
     
-   # priv = conn.execute(sec_privileges.select().where(sec_privileges.c.id_userole == result[0][0])).fetchall()
+   # priv = conn.execute(SecPrivilege.select().where(SecPrivilege.c.id_userole == result[0][0])).fetchall()
     
     #print(priv)
     
-    return conn.execute(sec_privileges.select().where(sec_privileges.c.id_userole == result[0][0])).fetchall()
+    return conn.execute(SecPrivilege.select().where(SecPrivilege.c.id_userole == result[0][0])).fetchall()
 

@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, MetaData
 
-engine = create_engine("mysql+pymysql://root:Kj6mcacakk4fkd!@localhost:3306/cloud_tecnologias_api")
+
+engine = create_engine("sqlite:///sqlite3.db")
 
 meta = MetaData()
 
